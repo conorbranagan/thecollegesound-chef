@@ -1,4 +1,3 @@
-root = File.absolute_path(File.dirname(__FILE__))
+root_path = File.expand_path(File.join(File.dirname(__FILE__), '..'))
 
-file_cache_path root
-cookbook_path root + '/cookbooks'
+cookbook_path  File.join(root_path, 'cookbooks')
