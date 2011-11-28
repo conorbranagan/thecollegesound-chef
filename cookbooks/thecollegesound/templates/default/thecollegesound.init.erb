@@ -1,0 +1,7 @@
+# The College Sound - upstart script
+# Copyright 2011, The College Sound
+# Author: Conor Branagan
+
+start on startup
+
+exec gunicorn_django --workers=@workers @settings_path

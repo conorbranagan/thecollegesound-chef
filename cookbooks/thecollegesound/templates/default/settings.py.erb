@@ -1,0 +1,96 @@
+# The College Sound - Production Settings
+import os.path
+
+DEBUG = False
+TEMPLATE_DEBUG = False
+
+ADMINS = (
+    ('Conor Branagan', 'admin@thecollegesound.com'),
+)
+
+MANAGERS = ADMINS
+
+DATABASE_ENGINE = 'mysql'
+DATABASE_NAME = @dbname
+DATABASE_USER = @dbuser
+DATABASE_PASSWORD = @dbpass
+DATABASE_HOST = @dbhost
+DATABASE_PORT = @dbport
+
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# Local time zone for this installation. Choices can be found here:
+# http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
+# although not all choices may be available on all operating systems.
+# If running in a Windows environment this must be set to the same as your
+# system time zone.
+TIME_ZONE = @tz_name
+
+# Language code for this installation. All choices can be found here:
+# http://www.i18nguy.com/unicode/language-identifiers.html
+LANGUAGE_CODE = 'en-us'
+
+SITE_ID = 1
+
+# If you set this to False, Django will make some optimizations so as not
+# to load the internationalization machinery.
+USE_I18N = True
+
+# Absolute path to the directory that holds media.
+MEDIA_ROOT = @media_root
+
+# URL that handles the media served from MEDIA_ROOT. Make sure to use a
+# trailing slash if there is a path component (optional in other cases).
+# Examples: "http://media.lawrence.com", "http://example.com/media/"
+MEDIA_URL = ''
+
+# URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
+# trailing slash.
+# Examples: "http://foo.com/media/", "/media/".
+ADMIN_MEDIA_PREFIX = @admin_media_prefix
+AUTH_PROFILE_MODULE = 'main.Account'
+
+# Make this unique, and don't share it with anybody.
+SECRET_KEY = 'on^c-)w_o7=js(!ts4t-+x$^pr2gv6fig=5govsx!3zcb5+w@v'
+
+# List of callables that know how to import templates from various sources.
+TEMPLATE_LOADERS = (
+    'django.template.loaders.filesystem.load_template_source',
+    'django.template.loaders.app_directories.load_template_source',
+)
+
+MIDDLEWARE_CLASSES = (
+  'django.middleware.common.CommonMiddleware',
+  'django.contrib.sessions.middleware.SessionMiddleware',
+  'django.contrib.auth.middleware.AuthenticationMiddleware',
+)
+
+ROOT_URLCONF = 'collegesound.urls'
+
+TEMPLATE_DIRS = (
+  @template_dir,
+)
+
+INSTALLED_APPS = (
+    'collegesound.main',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.sites',
+    'django.contrib.admin',
+)
+
+# Custom settings
+TEMP_FILE_PREFIX = @tmp_file_path
+
+TWITTERAUTH_KEY = '7cjsknGHgCMXaR3DxHJQ'
+TWITTERAUTH_SECRET = 'Cs9AHF6uAjkdaYro2oCIAgA8WoacIL6WQQJAc0eB1bo'
+
+AWS_ACCESS_KEY_ID = 'AKIAISNNKCS73OL6CTFA'
+AWS_SECRET_ACCESS_KEY = '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'
+
+#EMAIL_HOST = 'smtp.webfaction.com'
+#EMAIL_HOST_USER = 'squid890'
+#EMAIL_HOST_PASSWORD = '29850001619753'
+#DEFAULT_FROM_EMAIL = 'admin@thecollegesound.com'
+#SERVER_EMAIL = 'admin@thecollegesound.com'
