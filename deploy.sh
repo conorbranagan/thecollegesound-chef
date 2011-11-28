@@ -24,6 +24,8 @@ do
   # we remove (-R) the old host key from known_hosts
   ssh-keygen -R "${host#*@}" 2> /dev/null
 
+  echo "Deploying to ${host}"
+
   tar cj . | ssh -o 'StrictHostKeyChecking no' "$host" '
   sudo rm -rf ~/chef &&
   mkdir ~/chef &&

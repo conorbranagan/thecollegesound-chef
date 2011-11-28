@@ -66,3 +66,5 @@ default['mysql']['tunable']['expire_logs_days']     = 10
 default['mysql']['tunable']['max_binlog_size']      = "100M"
 
 default['mysql']['tunable']['innodb_buffer_pool_size']  = "256M"
+
+default['mysql']['server_root_password'] = '.Qx(N>OLsCoZ{WI='
