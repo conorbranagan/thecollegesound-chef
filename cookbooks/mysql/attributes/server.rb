@@ -19,6 +19,7 @@
 
 default['mysql']['bind_address']               = attribute?('cloud') ? cloud['local_ipv4'] : ipaddress
 default['mysql']['data_dir']                   = "/var/lib/mysql"
+default['mysql']['server_root_password']       = 'CHANGEME'
 
 case node["platform"]
 when "centos", "redhat", "fedora", "suse"
@@ -66,5 +67,3 @@ default['mysql']['tunable']['expire_logs_days']     = 10
 default['mysql']['tunable']['max_binlog_size']      = "100M"
 
 default['mysql']['tunable']['innodb_buffer_pool_size']  = "256M"
-
-default['mysql']['server_root_password'] = '.Qx(N>OLsCoZ{WI='

@@ -1,30 +1,36 @@
 # The College Sound - Production Settings
 import os.path
 
-DEBUG = False
+DEBUG = <%= @debug %>
 TEMPLATE_DEBUG = False
 
 ADMINS = (
-    ('Conor Branagan', 'admin@thecollegesound.com'),
+    ('Conor Branagan', '<%= @admin_email %>'),
 )
 
 MANAGERS = ADMINS
 
-DATABASE_ENGINE = 'mysql'
-DATABASE_NAME = @dbname
-DATABASE_USER = @dbuser
-DATABASE_PASSWORD = @dbpass
-DATABASE_HOST = @dbhost
-DATABASE_PORT = @dbport
+DATABASES = {
+  'default': {
+    'ENGINE': 'django.db.backends.mysql',
+    'NAME': '<%= @db[:name] %>',
+    'USER': '<%= @db[:user] %>',
+    'PASSWORD': '<%= @db[:pass] %>',
+    'HOST': '<%= @db[:host] %>',
+    'PORT': '<%= @db[:port] %>'
+  }
+}
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+SITE_ROOT = '<%= @site_root %>'
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # although not all choices may be available on all operating systems.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
-TIME_ZONE = @tz_name
+TIME_ZONE = '<%= @tz_name %>'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -37,7 +43,7 @@ SITE_ID = 1
 USE_I18N = True
 
 # Absolute path to the directory that holds media.
-MEDIA_ROOT = @media_root
+MEDIA_ROOT = '<%= @media_root %>'
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
@@ -47,15 +53,15 @@ MEDIA_URL = ''
 # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
 # trailing slash.
 # Examples: "http://foo.com/media/", "/media/".
-ADMIN_MEDIA_PREFIX = @admin_media_prefix
+ADMIN_MEDIA_PREFIX = '<%= @admin_media_prefix %>'
 AUTH_PROFILE_MODULE = 'main.Account'
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = 'on^c-)w_o7=js(!ts4t-+x$^pr2gv6fig=5govsx!3zcb5+w@v'
+SECRET_KEY = '<%= @django_secret_key %>'
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.load_template_source',
+    'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.load_template_source',
 )
 
@@ -63,12 +69,13 @@ MIDDLEWARE_CLASSES = (
   'django.middleware.common.CommonMiddleware',
   'django.contrib.sessions.middleware.SessionMiddleware',
   'django.contrib.auth.middleware.AuthenticationMiddleware',
+  'collegesound.middleware.datadog.DatadogExceptionMiddleware',
 )
 
 ROOT_URLCONF = 'collegesound.urls'
 
 TEMPLATE_DIRS = (
-  @template_dir,
+  '<%= @template_dir %>',
 )
 
 INSTALLED_APPS = (
@@ -78,19 +85,29 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.admin',
+    'south',
 )
 
-# Custom settings
-TEMP_FILE_PREFIX = @tmp_file_path
+DATE_FORMAT = 'Y-m-d'
 
-TWITTERAUTH_KEY = '7cjsknGHgCMXaR3DxHJQ'
-TWITTERAUTH_SECRET = 'Cs9AHF6uAjkdaYro2oCIAgA8WoacIL6WQQJAc0eB1bo'
+# App settings
+TEMP_FILE_PREFIX = '<%= @tmp_file_path %>'
+BIN_FILE_PREFIX = '<%= @bin_file_path %>'
 
-AWS_ACCESS_KEY_ID = 'AKIAISNNKCS73OL6CTFA'
-AWS_SECRET_ACCESS_KEY = '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'
+# AWS Settings - For Album Art Download
+AWS_ACCESS_KEY_ID = '<%= @aws[:access_key_id] %>'
+AWS_SECRET_ACCESS_KEY = '<%= @aws[:secret_access_key] %>'
 
-#EMAIL_HOST = 'smtp.webfaction.com'
-#EMAIL_HOST_USER = 'squid890'
-#EMAIL_HOST_PASSWORD = '29850001619753'
-#DEFAULT_FROM_EMAIL = 'admin@thecollegesound.com'
-#SERVER_EMAIL = 'admin@thecollegesound.com'
+# Email Settings - Using SES over SMTP
+EMAIL_BACKEND = '<%= @email[:backend] %>'
+EMAIL_HOST = '<%= @email[:host] %>'
+EMAIL_HOST_USER = '<%= @email[:host_user] %>'
+EMAIL_HOST_PASSWORD = '<%= @email[:host_password] %>'
+EMAIL_PORT = <%= @email[:port] %>
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = '<%= @admin_email %>'
+SERVER_EMAIL = '<%= @admin_email %>'
+
+# Datadog Info (found on https://app.datadoghq.com/accounts/settings#api)
+DATADOG_API_KEY = '<%= @datadog[:api_key] %>'
+DATADOG_APP_KEY = '<%= @datadog[:app_key] %>'

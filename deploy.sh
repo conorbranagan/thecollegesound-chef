@@ -26,7 +26,7 @@ do
 
   echo "Deploying to ${host}"
 
-  tar cj . | ssh -o 'StrictHostKeyChecking no' "$host" '
+  tar cj . | ssh -l root -o 'StrictHostKeyChecking no' "$host" '
   sudo rm -rf ~/chef &&
   mkdir ~/chef &&
   cd ~/chef &&

@@ -23,7 +23,6 @@ include_recipe "mysql::client"
 
 # generate all passwords
 node.set_unless['mysql']['server_debian_password'] = secure_password
-node.set_unless['mysql']['server_root_password']   = secure_password
 node.set_unless['mysql']['server_repl_password']   = secure_password
 
 if platform?(%w{debian ubuntu})
@@ -99,7 +98,7 @@ unless Chef::Config[:solo]
   end
 end
 
-# set the root password on platforms 
+# set the root password on platforms
 # that don't support pre-seeding
 unless platform?(%w{debian ubuntu})
 
@@ -108,7 +107,6 @@ unless platform?(%w{debian ubuntu})
     action :run
     only_if "/usr/bin/mysql -u root -e 'show databases;'"
   end
-
 end
 
 grants_path = "#{node['mysql']['conf_dir']}/mysql_grants.sql"

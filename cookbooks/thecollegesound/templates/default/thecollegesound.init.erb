@@ -4,4 +4,5 @@
 
 start on startup
 
-exec gunicorn_django --workers=@workers @settings_path
+chdir <%= @settings_path %>
+exec gunicorn_django --workers=<%= @workers %> -b 0.0.0.0:8000

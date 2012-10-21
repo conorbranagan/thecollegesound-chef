@@ -19,6 +19,8 @@
 #
 
 package "nginx"
+package "php5-cgi"
+package "php5-mysql"
 
 directory node[:nginx][:log_dir] do
   mode 0755
@@ -43,11 +45,39 @@ template "nginx.conf" do
   mode 0644
 end
 
-template "#{node[:nginx][:dir]}/sites-available/default" do
-  source "default-site.erb"
+template "#{node[:nginx][:dir]}/fastcgi.conf" do
+  source "fastcgi.conf.erb"
   owner "root"
   group "root"
   mode 0644
+end
+
+%w{thecollegesound.com blog.thecollegesound.com}.each do |site|
+  template "#{node[:nginx][:dir]}/sites-available/#{site}" do
+    source "#{site}.erb"
+    owner "root"
+    group "root"
+    mode 0644
+  end
+  
+  bash "enable_site" do
+    user "root"
+    code <<-EOH
+      nxensite #{site}
+    EOH
+  end
+end
+
+template "/etc/init.d/php-cgi" do
+  source "php-cgi.init.erb"
+  owner "root"
+  group "root"
+  mode 0755
+end
+
+service "php-cgi" do
+  supports :status => true, :restart => true, :reload => true
+  action [ :enable, :start ]
 end
 
 service "nginx" do
