@@ -36,7 +36,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # View the documentation for the provider you're using for more
   # information on available options.
 
-  # SSH config
+  # Share the development
+  config.vm.synced_folder "../thecollegesound", "/home/vagrant/workspace", :create => true, :nfs => true
+
   config.vm.provision :chef_solo do |chef|
     chef.run_list = [
       "apt",
@@ -57,8 +59,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         "server_repl_password" => "thec0lleges0und"
       },
       "thecollegesound" => {
+        "app_root" => "/home/vagrant/workspace",
         "ssh_key" => File.open("#{ENV['HOME']}/.ssh/tcs-chef") {|f| f.read},
-        "debug" => true
+        "debug" => true,
+        "deploy_from_git" => false
       }
     }
   end

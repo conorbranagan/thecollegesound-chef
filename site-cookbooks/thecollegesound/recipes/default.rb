@@ -3,7 +3,13 @@
 # Copyright 2014-2015, The College Sound
 #
 
-tcs_root = node['thecollegesound']['root']
+tcs_root = node['thecollegesound']['app_root']
+tcs_static = node['thecollegesound']['static_root']
+if node['thecollegesound']['deploy_from_git']
+  tcs_app = File.join(node['thecollegesound']['app_root'], 'current')
+else
+  tcs_app = node['thecollegesound']['app_root']
+end
 
 # -- Requirements
 include_recipe "nginx"
@@ -50,25 +56,62 @@ template '/etc/init/thecollegesound.conf' do
   owner 'root'
   group 'root'
   variables(
-    :settings_path => node['thecollegesound']['settings_path'],
+    :settings_path => tcs_app,
     :workers => node['thecollegesound']['gunicorn_workers']
   )
 end
 
 # -- Directories
-directory tcs_root do
+if node['thecollegesound']['deploy_from_git']
+  directory tcs_root do
+    owner tcs_user
+    mode '0755'
+  end
+end
+
+directory "#{tcs_static}" do
   owner tcs_user
   mode '0755'
 end
 
-directory "#{tcs_root}/shared" do
+directory "#{node['thecollegesound']['config_root']}" do
   owner tcs_user
   mode '0755'
 end
 
-directory "#{tcs_root}/static" do
+directory "#{tcs_static}/static" do
   owner tcs_user
   mode '0755'
+end
+
+directory "#{tcs_static}/static/cache" do
+  owner tcs_user
+  mode '0777'
+end
+
+directory "#{tcs_static}/static/cache/albums" do
+  owner tcs_user
+  mode '0777'
+end
+
+directory "#{tcs_static}/static/show" do
+  owner tcs_user
+  mode '0777'
+end
+
+directory "#{tcs_static}/static/show/show_pic" do
+  owner tcs_user
+  mode '0777'
+end
+
+directory "#{tcs_static}/static/dj_img" do
+  owner tcs_user
+  mode '0777'
+end
+
+directory "#{tcs_static}/static/dj_img/profile_pic" do
+  owner tcs_user
+  mode '0777'
 end
 
 directory '/tmp/thecollegesound' do
@@ -107,7 +150,7 @@ end
 #end
 
 # -- Settings
-template "#{tcs_root}/shared/settings.py" do
+template "#{node['thecollegesound']['config_root']}/settings.py" do
   mode '0644'
   source 'settings.py.erb'
   owner 'root'
@@ -118,7 +161,7 @@ template "#{tcs_root}/shared/settings.py" do
     :tz_name => node['thecollegesound']['tz_name'],
     :media_root => node['thecollegesound']['media_root'],
     :admin_media_prefix => node['thecollegesound']['admin_media'],
-    :template_dir => node['thecollegesound']['template_dir'],
+    :template_dir => File.join(tcs_static, 'templates'),
     :tmp_file_path => node['thecollegesound']['tmp_path'],
     :site_root => node['thecollegesound']['site_root'],
 
@@ -162,38 +205,6 @@ end
 #  mode "0655"
 #end
 
-#### Setup the directories
-
-directory "#{tcs_root}/static/cache" do
-  owner tcs_user
-  mode '0777'
-end
-
-directory "#{tcs_root}/static/cache/albums" do
-  owner tcs_user
-  mode '0777'
-end
-
-directory "#{tcs_root}/static/show" do
-  owner tcs_user
-  mode '0777'
-end
-
-directory "#{tcs_root}/static/show/show_pic" do
-  owner tcs_user
-  mode '0777'
-end
-
-directory "#{tcs_root}/static/dj_img" do
-  owner tcs_user
-  mode '0777'
-end
-
-directory "#{tcs_root}/static/dj_img/profile_pic" do
-  owner tcs_user
-  mode '0777'
-end
-
 # -- Do the SCM deploy
 
 # Configure the SSH keys
@@ -208,56 +219,79 @@ cookbook_file '/tmp/tcsdeploy/wrap-ssh4git.sh' do
   mode 00700
 end
 
-git = node['thecollegesound']['git']
-deploy_revision "#{tcs_root}" do
-  user tcs_user
-  repository "#{git['user']}@#{git['host']}:#{git['repo']}"
-  ssh_wrapper '/tmp/tcsdeploy/wrap-ssh4git.sh'
-  migrate false
-  symlink_before_migrate 'settings.py' => 'settings.py'
-  symlinks 'settings.py' => 'settings.py'
-  before_restart do
-    # -- Link statics (css, js, basic images)
-    # FIXME: Consolidate the image directories
-    ['css', 'js', 'images', 'icons', 'img'].each do |dir|
-      link "#{tcs_root}/static/#{dir}" do
-        to "#{tcs_root}/current/collegesound/static/#{dir}"
-      end
-    end
+# Having symlinks and migrations handled separately so we can run these
+# with or without a deploy from git
+def setup_before_restart
+  tcs_static = node['thecollegesound']['static_root']
+  if node['thecollegesound']['deploy_from_git']
+    tcs_app = File.join(node['thecollegesound']['app_root'], 'current')
+  else
+    tcs_app = node['thecollegesound']['app_root']
+  end
 
-    # -- Link templates
-    link "#{tcs_root}/templates" do
-      to "#{tcs_root}/current/collegesound/templates"
-    end
-
-    # -- Link settings
-    link "#{tcs_root}/current/collegesound/settings.py" do
-      to "#{tcs_root}/shared/settings.py"
-    end
-
-    # -- Install the package
-    bash 'install_package' do
-      user 'root'
-      cwd "#{tcs_root}/current/"
-      code 'python setup.py install'
-    end
-
-    # -- Run migration
-    bash 'run_migration' do
-      user 'root'
-      cwd "#{tcs_root}/current/collegesound/"
-      code <<-EOH
-        python manage.py convert_to_south main
-        python manage.py migrate main
-      EOH
+  # -- Link statics (css, js, basic images)
+  # FIXME: Consolidate the image directories
+  ['css', 'js', 'images', 'icons', 'img'].each do |dir|
+    link "#{tcs_static}/static/#{dir}" do
+      to "#{tcs_app}/collegesound/static/#{dir}"
     end
   end
+
+  # -- Link templates
+  link "#{tcs_static}/templates" do
+    to "#{tcs_app}/collegesound/templates"
+  end
+
+  # -- Link settings
+  link "#{tcs_app}/collegesound/settings.py" do
+    to "#{node['thecollegesound']['config_root']}/settings.py"
+  end
+
+  # -- Install the package
+  bash 'install_package' do
+    user 'root'
+    cwd tcs_app
+    code 'python setup.py install'
+  end
+
+  # -- Run migration
+  bash 'run_migration' do
+    user 'root'
+    cwd "#{tcs_app}/collegesound"
+    code <<-EOH
+      python manage.py convert_to_south main
+      python manage.py migrate main
+    EOH
+  end
+end
+
+# Deploy from git or just run the setup for development environments.
+if node['thecollegesound']['deploy_from_git']
+  git = node['thecollegesound']['git']
+  deploy_revision "#{tcs_root}" do
+    user tcs_user
+    repository "#{git['user']}@#{git['host']}:#{git['repo']}"
+    ssh_wrapper '/tmp/tcsdeploy/wrap-ssh4git.sh'
+    migrate false
+    symlink_before_migrate 'settings.py' => 'settings.py'
+    symlinks 'settings.py' => 'settings.py'
+    before_restart do
+      setup_before_restart()
+    end
+  end
+else
+  setup_before_restart()
 end
 
 # -- NginX site
 template '/etc/nginx/sites-available/thecollegesound' do
   source 'thecollegesound.nginx.conf.erb'
   user 'root'
+  variables(
+    :access_log_dir => node['nginx']['log_dir'],
+    :admin_media    => node['thecollegesound']['admin_media'],
+    :static_root    => node['thecollegesound']['static_root']
+  )
 end
 
 nginx_site 'thecollegesound' do
@@ -269,5 +303,5 @@ service 'thecollegesound' do
   provider Chef::Provider::Service::Upstart
   supports :start => true, :restart => true, :stop => true
   action [:enable, :start]
-  subscribes :restart, "template[#{tcs_root}/shared/settings.py]"
+  subscribes :restart, "template[/etc/thecollegesound/settings.py]"
 end

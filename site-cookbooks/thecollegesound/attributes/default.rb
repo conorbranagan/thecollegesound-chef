@@ -1,14 +1,16 @@
 #
 # Production defaults.
 #
-default['thecollegesound']['root'] = '/srv/thecollegesound'
+default['thecollegesound']['deploy_from_git'] = true
+default['thecollegesound']['app_root'] = '/srv/thecollegesound'
+default['thecollegesound']['static_root'] = '/opt/thecollegesound'
+default['thecollegesound']['config_root'] = '/etc/thecollegesound'
 
 # Django-specific Settings
 default['thecollegesound']['debug']        = false
 default['thecollegesound']['tz_name']      = 'America/New_York'
 default['thecollegesound']['media_root']   = '/srv/thecollegesound/static/'
 default['thecollegesound']['admin_media']  = '/admin/media/'
-default['thecollegesound']['template_dir'] = "#{default['thecollegesound']['root']}/templates/"
 default['thecollegesound']['site_root']    = 'http://thecollegesound.com'
 default['thecollegesound']['secret_key']   = 'CHANGEME'
 
@@ -46,7 +48,6 @@ default['thecollegesound']['email'] = {
 # Other settings
 default['thecollegesound']['gunicorn_workers'] = 5
 default['thecollegesound']['user']             = 'thecollegesound'
-default['thecollegesound']['settings_path']    = "#{default['thecollegesound']['root']}/current/collegesound/"
 default['thecollegesound']['tmp_path']         = ''
 default['thecollegesound']['bin_path']         = '/usr/local/bin'
 
