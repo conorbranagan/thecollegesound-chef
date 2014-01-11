@@ -209,7 +209,7 @@ cookbook_file '/tmp/tcsdeploy/wrap-ssh4git.sh' do
 end
 
 git = node['thecollegesound']['git']
-timestamped_deploy "#{tcs_root}" do
+deploy_revision "#{tcs_root}" do
   user tcs_user
   repository "#{git['user']}@#{git['host']}:#{git['repo']}"
   ssh_wrapper '/tmp/tcsdeploy/wrap-ssh4git.sh'
@@ -268,5 +268,6 @@ end
 service 'thecollegesound' do
   provider Chef::Provider::Service::Upstart
   supports :start => true, :restart => true, :stop => true
-  action [ :stop, :start ]
+  action [:enable, :start]
+  subscribes :restart, "template[#{tcs_root}/shared/settings.py]"
 end
