@@ -1,8 +1,14 @@
 # The College Sound - Production Settings
 import os.path
 
-DEBUG = <%= @debug %>
+<% if @debug %>
+DEBUG = True
+TEMPLATE_DEBUG = True
+<% else %>
+DEBUG = False
 TEMPLATE_DEBUG = False
+<% end %>
+
 
 ADMINS = (
     ('Conor Branagan', '<%= @admin_email %>'),

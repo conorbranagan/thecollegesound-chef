@@ -36,18 +36,29 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # View the documentation for the provider you're using for more
   # information on available options.
 
+  # SSH config
   config.vm.provision :chef_solo do |chef|
     chef.run_list = [
+      "apt",
+      "workspace",
       "mysql::server",
       "nginx",
       "gunicorn",
+      "thecollegesound",
     ]
 
     chef.json = {
+      "workspace" => {
+        "owner" => "vagrant"
+      },
       "mysql" => {
         "server_root_password" => "thec0lleges0und",
         "server_debian_password" => "thec0lleges0und",
         "server_repl_password" => "thec0lleges0und"
+      },
+      "thecollegesound" => {
+        "ssh_key" => File.open("#{ENV['HOME']}/.ssh/tcs-chef") {|f| f.read},
+        "debug" => true
       }
     }
   end

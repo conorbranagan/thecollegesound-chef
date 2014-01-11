@@ -1,0 +1,12 @@
+Host github.com
+    StrictHostKeyChecking no
+
+Host prod
+User topdog
+HostName kerberos.datadoghq.com
+IdentityFile ~/.ssh/id_rsa
+
+Host staging
+User topdog
+HostName kerberos.datad0g.com
+IdentityFile ~/.ssh/id_rsa
