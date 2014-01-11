@@ -60,9 +60,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       },
       "thecollegesound" => {
         "app_root" => "/home/vagrant/workspace",
-        "ssh_key" => File.open("#{ENV['HOME']}/.ssh/tcs-chef") {|f| f.read},
         "debug" => true,
         "deploy_from_git" => false
+        "ssh_key" => File.open("#{ENV['HOME']}/.ssh/tcs-chef") {|f| f.read},
       }
     }
   end
