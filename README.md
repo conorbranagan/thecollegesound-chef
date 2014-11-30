@@ -16,28 +16,6 @@ of simple setup.
 
    $ ssh-keygen -t rsa -b 4096 -f ~/.ssh/tcs-chef
 
-2. Add that key to the Bitbucket or Github account that's storing the code.
+2. Add that key to the Github account that's storing the code.
 
 3. Install any necessary dependencies: Virtualbox, Vagrant.
-
-4. Run `vagrant up` to provision the environment.
-
-
-## Before production deploy. (TODO: Update some of these steps.)
-
-- Add/update the deploy target name to match what's in your local ~/.ssh/conf
-
-- Add the ssh public key of the new host to the `authorized_keys` template. This
-is so the `git clone username@localhost:/srv/...` will work as expected.
-
-- (Optionally) dump the latest DB using the `dump_db.sh` script in the `scripts`
-folder and place the dump file `tcs_dump.sql` in the home directory so it can
-be loaded into the database.
-
-## After the deploy
-
-- Re-load the Music DB from the latest Discogs dump found at [http://www.discogs.com/data/](http://www.discogs.com/data/)
-
-- !! Make sure stuff works !!
-
-- Point the DNS to the new server.
