@@ -3,25 +3,23 @@
 # Copyright 2014-2015, The College Sound
 #
 
-tcs_root = node['thecollegesound']['app_root']
 tcs_static = node['thecollegesound']['static_root']
-if node['thecollegesound']['deploy_from_git']
-  tcs_app = File.join(node['thecollegesound']['app_root'], 'current')
-else
-  tcs_app = node['thecollegesound']['app_root']
-end
+tcs_app = node['thecollegesound']['app_root']
 
-# -- Requirements
-include_recipe "nginx"
-include_recipe "mysql::server"
-include_recipe "gunicorn"
+# -- Cookbook Requirements
+include_recipe 'nginx'
+include_recipe 'mysql::server'
+include_recipe 'mysql::client'
+include_recipe 'gunicorn'
+include_recipe 'application'
 
 # -- Packages
 # xorg: Required for wkhtml2image
 # git-core: Required to pull down the repository
-# python-imaging: Used by webapp for handling images
-# python-mysqldb: So we can connect to MySQL from our app
-['git-core', 'python-imaging', 'python-mysqldb', 'xorg'].each do |requirement|
+[
+  'git-core',
+  'xorg'
+].each do |requirement|
   package requirement do
     action :install
   end
@@ -36,12 +34,13 @@ user tcs_user do
   action :create
 end
 
+# We need a key for git ssh access.
 directory "/home/#{tcs_user}/.ssh" do
   owner tcs_user
   mode "0700"
 end
 
-file "private-key" do
+file 'private-key' do
   path "/home/#{tcs_user}/.ssh/id_rsa"
   content node['thecollegesound']['ssh_key']
   action :create
@@ -49,74 +48,23 @@ file "private-key" do
   mode "0400"
 end
 
-# -- Init file
-template '/etc/init/thecollegesound.conf' do
-  mode '0755'
-  source 'thecollegesound.init.erb'
-  owner 'root'
-  group 'root'
-  variables(
-    :settings_path => tcs_app,
-    :workers => node['thecollegesound']['gunicorn_workers']
-  )
-end
-
 # -- Directories
-if node['thecollegesound']['deploy_from_git']
-  directory tcs_root do
+
+[
+  node['thecollegesound']['app_root'],
+  node['thecollegesound']['static_root'],
+  node['thecollegesound']['config_root'],
+  "#{node['thecollegesound']['app_root']}/shared",
+  "#{node['thecollegesound']['static_root']}/static/cache/album",
+  "#{node['thecollegesound']['static_root']}/static/show/show_pic",
+  "#{node['thecollegesound']['static_root']}/static/dj_img/profile_pic",
+  '/tmp/thecollegesound'
+].each do |dir|
+  directory dir do
     owner tcs_user
-    mode '0755'
+    mode '0777' # FIXME!! These permissions are clearly wrong.
+    recursive true
   end
-end
-
-directory "#{tcs_static}" do
-  owner tcs_user
-  mode '0755'
-end
-
-directory "#{node['thecollegesound']['config_root']}" do
-  owner tcs_user
-  mode '0755'
-end
-
-directory "#{tcs_static}/static" do
-  owner tcs_user
-  mode '0755'
-end
-
-directory "#{tcs_static}/static/cache" do
-  owner tcs_user
-  mode '0777'
-end
-
-directory "#{tcs_static}/static/cache/albums" do
-  owner tcs_user
-  mode '0777'
-end
-
-directory "#{tcs_static}/static/show" do
-  owner tcs_user
-  mode '0777'
-end
-
-directory "#{tcs_static}/static/show/show_pic" do
-  owner tcs_user
-  mode '0777'
-end
-
-directory "#{tcs_static}/static/dj_img" do
-  owner tcs_user
-  mode '0777'
-end
-
-directory "#{tcs_static}/static/dj_img/profile_pic" do
-  owner tcs_user
-  mode '0777'
-end
-
-directory '/tmp/thecollegesound' do
-  owner tcs_user
-  mode '0777'
 end
 
 # -- DB Setup
@@ -149,40 +97,6 @@ end
 #  EOH
 #end
 
-# -- Settings
-template "#{node['thecollegesound']['config_root']}/settings.py" do
-  mode '0644'
-  source 'settings.py.erb'
-  owner 'root'
-  group 'root'
-  variables(
-    # Django
-    :debug => node['thecollegesound']['debug'],
-    :tz_name => node['thecollegesound']['tz_name'],
-    :media_root => node['thecollegesound']['media_root'],
-    :admin_media_prefix => node['thecollegesound']['admin_media'],
-    :template_dir => File.join(tcs_static, 'templates'),
-    :tmp_file_path => node['thecollegesound']['tmp_path'],
-    :site_root => node['thecollegesound']['site_root'],
-
-    # DB
-    :db => node['thecollegesound']['db'],
-
-    # Email
-    :admin_email => node['thecollegesound']['admin_email'],
-    :email => node['thecollegesound']['email'],
-
-    # Datadog
-    :datadog => node['thecollegesound']['datadog'],
-
-    # App settings
-    :bin_file_path => node['thecollegesound']['tmp_path'],
-    :django_secret_key => node['thecollegesound']['secret_key'],
-
-    # AWS
-    :aws => node['thecollegesound']['aws']
-  )
-end
 
 # -- Deploy!
 
@@ -194,13 +108,13 @@ end
 #
 
 #cookbook_file '/usr/local/bin/wkhtmltoimage' do
-#  action :create_if_missing
+#  action 'create_if_missing'
 #  source 'wkhtmltoimage'
 #  mode "0655"
 #end
 
 #cookbook_file '/usr/local/bin/wkhtmltopdf' do
-#  action :create_if_missing
+#  action 'create_if_missing'
 #  source 'wkhtmltopdf'
 #  mode "0655"
 #end
@@ -223,11 +137,7 @@ end
 # with or without a deploy from git
 def setup_before_restart
   tcs_static = node['thecollegesound']['static_root']
-  if node['thecollegesound']['deploy_from_git']
-    tcs_app = File.join(node['thecollegesound']['app_root'], 'current')
-  else
-    tcs_app = node['thecollegesound']['app_root']
-  end
+  tcs_app = File.join(node['thecollegesound']['app_root'], 'current')
 
   # -- Link statics (css, js, basic images)
   # FIXME: Consolidate the image directories
@@ -240,11 +150,6 @@ def setup_before_restart
   # -- Link templates
   link "#{tcs_static}/templates" do
     to "#{tcs_app}/collegesound/templates"
-  end
-
-  # -- Link settings
-  link "#{tcs_app}/collegesound/settings.py" do
-    to "#{node['thecollegesound']['config_root']}/settings.py"
   end
 
   # -- Install the package
@@ -266,21 +171,54 @@ def setup_before_restart
 end
 
 # Deploy from git or just run the setup for development environments.
-if node['thecollegesound']['deploy_from_git']
-  git = node['thecollegesound']['git']
-  deploy_revision "#{tcs_root}" do
-    user tcs_user
-    repository "#{git['user']}@#{git['host']}:#{git['repo']}"
-    ssh_wrapper '/tmp/tcsdeploy/wrap-ssh4git.sh'
-    migrate false
-    symlink_before_migrate 'settings.py' => 'settings.py'
-    symlinks 'settings.py' => 'settings.py'
-    before_restart do
-      setup_before_restart()
-    end
+application 'thecollegesound' do
+  rollback_on_error false
+  path node['thecollegesound']['app_root']
+  owner node['thecollegesound']['user']
+  repository 'ssh://git@bitbucket.org/conorbranagan/thecollegesound.git'
+  revision 'master'
+  symlink_before_migrate ({
+    'local_settings.py' => 'local_settings.py'
+  })
+  migrate true
+
+  django do
+    requirements 'requirements/requirements.txt'
+    settings_template 'settings.py.erb'
+    local_settings_file 'local_settings.py'
+    debug node['thecollegesound']['debug']
+    settings ({
+      # Django
+      'debug' => node['thecollegesound']['debug'],
+      'tz_name' => node['thecollegesound']['tz_name'],
+      'media_root' => node['thecollegesound']['media_root'],
+      'admin_media_prefix' => node['thecollegesound']['admin_media'],
+      'template_dir' => File.join(tcs_static, 'templates'),
+      'tmp_file_path' => node['thecollegesound']['tmp_path'],
+      'site_root' => node['thecollegesound']['site_root'],
+
+      # DB
+      'db' => node['thecollegesound']['db'],
+
+      # Email
+      'admin_email' => node['thecollegesound']['admin_email'],
+      'email' => node['thecollegesound']['email'],
+
+      # Datadog
+      'datadog' => node['thecollegesound']['datadog'],
+
+      # App settings
+      'bin_file_path' => node['thecollegesound']['tmp_path'],
+      'django_secret_key' => node['thecollegesound']['secret_key'],
+
+      # AWS
+      'aws' => node['thecollegesound']['aws']
+    })
   end
-else
-  setup_before_restart()
+
+  gunicorn do
+    app_module :django
+  end
 end
 
 # -- NginX site
@@ -288,20 +226,12 @@ template '/etc/nginx/sites-available/thecollegesound' do
   source 'thecollegesound.nginx.conf.erb'
   user 'root'
   variables(
-    :access_log_dir => node['nginx']['log_dir'],
-    :admin_media    => node['thecollegesound']['admin_media'],
-    :static_root    => node['thecollegesound']['static_root']
+    'access_log_dir' => node['nginx']['log_dir'],
+    'admin_media'    => node['thecollegesound']['admin_media'],
+    'static_root'    => node['thecollegesound']['static_root']
   )
 end
 
 nginx_site 'thecollegesound' do
   enable true
-end
-
-# -- Start Service
-service 'thecollegesound' do
-  provider Chef::Provider::Service::Upstart
-  supports :start => true, :restart => true, :stop => true
-  action [:enable, :start]
-  subscribes :restart, "template[/etc/thecollegesound/settings.py]"
 end

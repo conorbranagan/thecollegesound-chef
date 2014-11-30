@@ -1,7 +1,6 @@
 #
 # Production defaults.
 #
-default['thecollegesound']['deploy_from_git'] = true
 default['thecollegesound']['app_root'] = '/srv/thecollegesound'
 default['thecollegesound']['static_root'] = '/opt/thecollegesound'
 default['thecollegesound']['config_root'] = '/etc/thecollegesound'

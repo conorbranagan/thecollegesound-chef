@@ -37,10 +37,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.synced_folder "../thecollegesound", "/home/vagrant/workspace", :create => true, :nfs => true
 
   config.vm.provision :chef_solo do |chef|
+    chef.log_level = "debug"
+
     chef.run_list = [
       "apt",
       "workspace",
       "mysql::server",
+      "mysql::client",
       "nginx",
       "gunicorn",
       "thecollegesound",
@@ -56,10 +59,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         "server_repl_password" => "thec0lleges0und"
       },
       "thecollegesound" => {
-        "app_root" => "/home/vagrant/workspace",
+        "app_root" => "/srv/thecollegesound",
         "debug" => true,
-        "deploy_from_git" => false
-        "ssh_key" => File.open("#{ENV['HOME']}/.ssh/tcs-chef") {|f| f.read},
+        "deploy_from_git" => true,
+        "ssh_key" => File.open("#{ENV['HOME']}/.ssh/id_rsa") {|f| f.read},
       }
     }
   end
